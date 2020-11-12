@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+		<header class="entry-header">
+		<div class="entry-meta"><span class="screen-reader-text">Posted on</span> <a href="http://www.thecasualblogger.com/2018/11/11/java-stream-performance/" rel="bookmark"><time class="entry-date published updated" datetime="2018-11-11T18:32:43+00:00">November 11, 2018</time></a></div><!-- .entry-meta --><h3 class="entry-title"><a href="http://www.thecasualblogger.com/2018/11/11/java-stream-performance/" rel="bookmark">Java stream performance</a></h3>	</header><!-- .entry-header -->
+
+	
+	<div class="entry-content">
+		<p>Since Java Stream were introduced in version 8, there are many discussions about the fact they are slower than loops.&nbsp; I couldn’t help doing my own little rough test to make my own mind…</p>
+<p>The stream I’m checking is as follows:</p>
+<p>list.stream()<br>
+.filter(x-&gt;x&lt;50)<br>
+.map(x-&gt;x*2)<br>
+.reduce((x,y)-&gt;x+y);</p>
+<p>Ideally I should use tools such as JMH to run benchmark but I decided to do this manually as I’m only planning one test.</p>
+<p>As the goal is to check the cost using stream only (stream-&gt;filter-&gt;map-&gt;reduce), I’m careful to use very simple lambda function with a very low cost. If the lamba function was costly, I may not see significant performance difference between stream and loop.</p>
+<p>Again ideally I should try to find the cost of each lambda functions (x&lt;50, x*2,x+y) used in my test and subtracts it to the cost of the stream function.&nbsp; But I didn’t find a satisfying approach. If I test the time taken for a single “x*2” operation then I’m afraid the result may not be accurate. After all, a multiplication by 2 is as simple as a left shift for a CPU.</p>
+<p><a href="https://math.stackexchange.com/questions/1610667/why-shifting-left-1-bit-is-the-same-as-multiply-the-number-by-2">https://math.stackexchange.com/questions/1610667/why-shifting-left-1-bit-is-the-same-as-multiply-the-number-by-2</a></p>
+<p>In other words, this could take in theory as little as 1 cycle on the CPU. With this in mind, the cost of checking the time of this operation may be much greater than the operation itself. I decided not to take this risk.</p>
+<p>Alternatively I could run the x*2&nbsp; code in a loop to reduce this risk but this defeated the goal of checking the cost on its own without loop (or stream).</p>
+<p>Going forward and taking on board limitations of my test, I ran the class below several times . I got a bit surprised with the variability of the results. Overall, I saw the stream being from 50% up to 100% slower than the loop.</p>
+<p>This is in line with the result seen in this stackoverflow post (75%) with the JMH tool :</p>
+<p><a href="https://stackoverflow.com/questions/22658322/java-8-performance-of-streams-vs-collections">https://stackoverflow.com/questions/22658322/java-8-performance-of-streams-vs-collections</a></p>
+<p>For fun, I tested using a more costly method as well Math.cos(i)) and found the difference being only 16% then (with much less variability). This result of course should be dismissed. However this shows as well that if somehow we were able to remove all function used within the stream then we may find stream performing even slower than loop.</p>
+<p>So why using stream then?</p>
+<p>Well, for me, before anything else: readability.<br>
+It is just much easier to understand the intent of the code using stream than loop.</p>
+<p>Code:</p>
+<p class="western" style="background-color: #eff0f1;" align="LEFT"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>package</b></span><span style="color: #000000;"> blog;<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>import</b></span><span style="color: #000000;"> java.util.ArrayList;<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>import</b></span><span style="color: #000000;"> java.util.List;<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>import</b></span><span style="color: #000000;"> java.util.Optional;<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>public</b></span> <span style="color: #7f0055;"><b>class</b></span><span style="color: #000000;"> StreamPerformance {</span></span></span></p>
+<p class="western" style="background-color: #eff0f1;" align="LEFT"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"> <span style="color: #7f0055;"><b>public</b></span> <span style="color: #7f0055;"><b>static</b></span> <span style="color: #7f0055;"><b>void</b></span><span style="color: #000000;"> main(String </span><span style="color: #6a3e3e;">args</span><span style="color: #000000;">[])<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">{<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #000000;">&nbsp; List&lt;Integer&gt; </span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">=</span><span style="color: #7f0055;"><b>new</b></span><span style="color: #000000;"> ArrayList&lt;Integer&gt;();</span><br>
+<span style="color: #7f0055;"><b>&nbsp; for</b></span><span style="color: #000000;">(</span><span style="color: #7f0055;"><b>int</b></span> <span style="color: #6a3e3e;">i</span><span style="color: #000000;">=0;</span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">&lt;50;</span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">++)<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; {</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #6a3e3e;">&nbsp; list</span><span style="color: #000000;">.add( (</span><span style="color: #7f0055;"><b>int</b></span><span style="color: #000000;">) Math.</span><span style="color: #000000;"><i>ceil</i></span><span style="color: #000000;">(Math.</span><span style="color: #000000;"><i>random</i></span><span style="color: #000000;">() * 100));<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; }</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">stream</span><span style="color: #000000;">=0;</span><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">loop</span><span style="color: #000000;">=0;<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #7f0055;"><b>&nbsp; for</b></span><span style="color: #000000;">(</span><span style="color: #7f0055;"><b>int</b></span> <span style="color: #6a3e3e;">j</span><span style="color: #000000;">=0;</span><span style="color: #6a3e3e;">j</span><span style="color: #000000;">&lt;1000_000;</span><span style="color: #6a3e3e;">j</span><span style="color: #000000;">++) {</span><br>
+<span style="color: #6a3e3e;">&nbsp;&nbsp;&nbsp; stream</span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">stream</span><span style="color: #000000;">+StreamPerformance.</span><span style="color: #000000;"><i>StreamTest</i></span><span style="color: #000000;">(</span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">)<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #6a3e3e;">loop</span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">loop</span><span style="color: #000000;">+StreamPerformance.</span><span style="color: #000000;"><i>LoopTest</i></span><span style="color: #000000;">(</span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">);<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; }<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #000000;">&nbsp; System.</span><span style="color: #0000c0;"><i><b>out</b></i></span><span style="color: #000000;">.println(</span><span style="color: #2a00ff;">“Total Stream time:”</span><span style="color: #000000;">+</span><span style="color: #6a3e3e;">stream</span><span style="color: #000000;">);<br>
+System.</span><span style="color: #0000c0;"><i><b>out</b></i></span><span style="color: #000000;">.println(</span><span style="color: #2a00ff;">“Total Loop time :”</span><span style="color: #000000;">+</span><span style="color: #6a3e3e;">loop</span><span style="color: #000000;">);</span><br>
+<span style="color: #7f0055;"><b>&nbsp; float</b></span> <span style="color: #6a3e3e;">streamf</span><span style="color: #000000;">= (</span><span style="color: #7f0055;"><b>float</b></span><span style="color: #000000;">) </span><span style="color: #6a3e3e;">stream</span><span style="color: #000000;">;</span><br>
+<span style="color: #7f0055;"><b>&nbsp; float</b></span> <span style="color: #6a3e3e;">loopf</span><span style="color: #000000;">=(</span><span style="color: #7f0055;"><b>float</b></span><span style="color: #000000;">) </span><span style="color: #6a3e3e;">loop</span><span style="color: #000000;">;</span><br>
+<span style="color: #7f0055;"><b>&nbsp; float</b></span> <span style="color: #6a3e3e;">ratio</span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">streamf</span><span style="color: #000000;">/</span><span style="color: #6a3e3e;">loopf</span><span style="color: #000000;">;<br>
+System.</span><span style="color: #0000c0;"><i><b>out</b></i></span><span style="color: #000000;">.println(</span><span style="color: #2a00ff;">“Percentage time increase is :”</span><span style="color: #000000;">+</span><span style="color: #6a3e3e;">ratio</span><span style="color: #000000;">);<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">}</span></span></span></p>
+<p class="western" style="background-color: #eff0f1;" align="LEFT"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>public</b></span> <span style="color: #7f0055;"><b>static</b></span> <span style="color: #7f0055;"><b>long</b></span><span style="color: #000000;"> StreamTest(List&lt;Integer&gt; </span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">)<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">{</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">start</span><span style="color: #000000;"> = System.</span><span style="color: #000000;"><i>nanoTime</i></span><span style="color: #000000;">();<br>
+Optional&lt;Integer&gt; </span><span style="color: #6a3e3e;">result</span><span style="color: #000000;">= </span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">.stream()<br>
+.filter(</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">-&gt;</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">&lt;50)<br>
+.map(</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">-&gt;</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">*2)</span><br>
+<span style="color: #3f7f5f;">&nbsp;&nbsp; // .map(i-&gt; (</span><span style="color: #3f7f5f;"><u>int</u></span><span style="color: #3f7f5f;">) Math.cos(i))<br>
+</span><span style="color: #000000;">&nbsp; .reduce((</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">,</span><span style="color: #6a3e3e;">y</span><span style="color: #000000;">)-&gt;</span><span style="color: #6a3e3e;">x</span><span style="color: #000000;">+</span><span style="color: #6a3e3e;">y</span><span style="color: #000000;">);<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #000000;">&nbsp; Integer </span><span style="color: #6a3e3e;"><u>r</u></span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">result</span><span style="color: #000000;">.get();</span><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">finish</span><span style="color: #000000;"> = System.</span><span style="color: #000000;"><i>nanoTime</i></span><span style="color: #000000;">();</span><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">timeElapsed</span><span style="color: #000000;"> = </span><span style="color: #6a3e3e;">finish</span><span style="color: #000000;"> – </span><span style="color: #6a3e3e;">start</span><span style="color: #000000;">;</span><br>
+<span style="color: #3f7f5f;">&nbsp; //System.out.println(“Stream lasted </span><span style="color: #3f7f5f;"><u>nano</u></span><span style="color: #3f7f5f;">:”+timeElapsed);</span><br>
+<span style="color: #7f0055;"><b>&nbsp; return</b></span> <span style="color: #6a3e3e;">timeElapsed</span><span style="color: #000000;">;<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; }</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>public</b></span> <span style="color: #7f0055;"><b>static</b></span> <span style="color: #7f0055;"><b>long</b></span><span style="color: #000000;"> LoopTest(List&lt;Integer&gt; </span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">)<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; {</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">start</span><span style="color: #000000;"> = System.</span><span style="color: #000000;"><i>nanoTime</i></span><span style="color: #000000;">();<br>
+Integer </span><span style="color: #6a3e3e;">r</span><span style="color: #000000;">=0;</span><br>
+<span style="color: #7f0055;"><b>&nbsp; for</b></span><span style="color: #000000;">(Integer </span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">:</span><span style="color: #6a3e3e;">list</span><span style="color: #000000;">)<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp;&nbsp;&nbsp; {</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>&nbsp;&nbsp;&nbsp; if</b></span><span style="color: #000000;">(</span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">&lt;50)<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><span style="color: #6a3e3e;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; i</span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">*2;</span><br>
+<span style="color: #3f7f5f;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // i=(</span><span style="color: #3f7f5f;"><u>int</u></span><span style="color: #3f7f5f;">) Math.cos(i);</span><br>
+<span style="color: #6a3e3e;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; r</span><span style="color: #000000;">=</span><span style="color: #6a3e3e;">r</span><span style="color: #000000;">+</span><span style="color: #6a3e3e;">i</span><span style="color: #000000;">;<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp;&nbsp;&nbsp; }<br>
+}</span></span></span><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;"><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">finish</span><span style="color: #000000;"> = System.</span><span style="color: #000000;"><i>nanoTime</i></span><span style="color: #000000;">();</span><br>
+<span style="color: #7f0055;"><b>&nbsp; long</b></span> <span style="color: #6a3e3e;">timeElapsed</span><span style="color: #000000;"> = </span><span style="color: #6a3e3e;">finish</span><span style="color: #000000;"> – </span><span style="color: #6a3e3e;">start</span><span style="color: #000000;">;</span><br>
+<span style="color: #3f7f5f;">&nbsp; //System.out.println(“Loop lasted </span><span style="color: #3f7f5f;"><u>nano</u></span><span style="color: #3f7f5f;"> :”+timeElapsed);</span><br>
+<span style="color: #7f0055;"><b>&nbsp; return</b></span> <span style="color: #6a3e3e;">timeElapsed</span><span style="color: #000000;">;<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">&nbsp; }<br>
+</span></span></span><span style="color: #000000;"><span style="font-family: Consolas, sans-serif;"><span style="font-size: small;">}</span></span></span></p>
+	</div><!-- .entry-content -->
+
+	
+
+
+
+
+
+
+  </body>
+</html>
