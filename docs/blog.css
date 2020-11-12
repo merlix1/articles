@@ -3,3 +3,7 @@ main {
 width:900px;
 margin:0 auto 20px
 }
+#top {
+  background-color:#45d1df;text-align:center;font-size:36px;text-transform:uppercase;letter-spacing:12px;
+}
+#top a{color:#FEFEFE;text-decoration:none}
