@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+		<header class="entry-header">
+		<div class="entry-meta"><span class="screen-reader-text">Posted on</span> <a href="http://www.thecasualblogger.com/2019/04/01/how-to-run-elasticsearch-in-eclipse/" rel="bookmark"><time class="entry-date published updated" datetime="2019-04-01T20:57:32+00:00">April 1, 2019</time></a></div><!-- .entry-meta --><h3 class="entry-title"><a href="http://www.thecasualblogger.com/2019/04/01/how-to-run-elasticsearch-in-eclipse/" rel="bookmark">How to run Elasticsearch in Eclipse.</a></h3>	</header><!-- .entry-header -->
+
+	
+	<div class="entry-content">
+		<p>This is a summary of steps I need to get ElasticSearch source code up and running in Eclipse.</p>
+<p>Please note this was done in March 2019 (things are moving fast…) on a Ubuntu machine with:</p>
+<p>Eclipse IDE for Java Developers<br>
+Version: Photon Release (4.8.0)</p>
+<p>The main steps were explained in the article below but I experienced few difficulties which I document here.</p>
+<p>Main article:</p>
+<p><a href="https://github.com/elastic/elasticsearch/blob/master/CONTRIBUTING.md#contributing-to-the-elasticsearch-codebase">https://github.com/elastic/elasticsearch/blob/master/CONTRIBUTING.md#contributing-to-the-elasticsearch-codebase</a></p>
+<p>I’m extracting the most relevant information from the page above for my use case:</p>
+<hr>
+<h2 style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>Contributing to the Elasticsearch codebase</em></span></h2>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em><strong>Repository:</strong> <a style="color: #000000;" href="https://github.com/elastic/elasticsearch">https://github.com/elastic/elasticsearch</a></em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>JDK 11 is required to build Elasticsearch. You must have a JDK 11 installation with the environment variable <code>JAVA_HOME</code> referencing the path to Java home for your JDK 11 installation. By default, tests use the same runtime as <code>JAVA_HOME</code>. However, since Elasticsearch supports JDK 8, the build supports compiling with JDK 11 and testing on a JDK 8 runtime; to do this, set <code>RUNTIME_JAVA_HOME</code> pointing to the Java home of a JDK 8 installation. Note that this mechanism can be used to test against other JDKs as well, this is not only limited to JDK 8.</em></span></p>
+<blockquote style="padding-left: 120px;">
+<p style="padding-left: 120px;"><span style="color: #000000;"><em>Note: It is also required to have <code>JAVA8_HOME</code>, <code>JAVA9_HOME</code>, <code>JAVA10_HOME</code> and <code>JAVA11_HOME</code> available so that the tests can pass.</em></span></p>
+</blockquote>
+<blockquote style="padding-left: 120px;">
+<p style="padding-left: 120px;"><span style="color: #000000;"><em>Warning: do not use <code>sdkman</code> for Java installations which do not have proper <code>jrunscript</code> for jdk distributions.</em></span></p>
+</blockquote>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>Elasticsearch uses the Gradle wrapper for its build. You can execute Gradle using the wrapper via the <code>gradlew</code> script in the root of the repository.</em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>We support development in the Eclipse and IntelliJ IDEs. For Eclipse, the minimum version that we support is <a style="color: #000000;" href="http://www.eclipse.org/community/eclipse_newsletter/2017/june/" rel="nofollow">Eclipse Oxygen</a> (version 4.7). For IntelliJ, the minimum version that we support is <a style="color: #000000;" href="https://blog.jetbrains.com/idea/2017/07/intellij-idea-2017-2-is-here-smart-sleek-and-snappy/" rel="nofollow">IntelliJ 2017.2</a>.</em></span></p>
+<h3 style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>Configuring IDEs And Running Tests</em></span></h3>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>Eclipse users can automatically configure their IDE: <code>./gradlew eclipse</code> then <code>File: Import: Existing Projects into Workspace</code>. Select the option <code>Search for nested projects</code>. Additionally you will want to ensure that Eclipse is using 2048m of heap by modifying <code>eclipse.ini</code> accordingly to avoid GC overhead errors.</em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>…</em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>To run an instance of elasticsearch from the source code run <code>./gradlew run</code></em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>The Elasticsearch codebase makes heavy use of Java <code>assert</code>s and the test runner requires that assertions be enabled within the JVM. This can be accomplished by passing the flag <code>-ea</code> to the JVM on startup.</em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>…</em></span></p>
+<p style="text-align: left; padding-left: 120px;"><span style="color: #000000;"><em>For Eclipse, go to <code>Preferences-&gt;Java-&gt;Installed JREs</code> and add <code>-ea</code> to <code>VM Arguments</code>.</em></span></p>
+<p>&nbsp;</p>
+<hr>
+<p>So as mentioned above, first steps were to install JDK 11, configure JAVA_HOME, download and unzip the source code and then run in a Linux terminal:</p>
+<p><code>./gradlew eclipse&nbsp;</code>(graflew file being found in the unzipped source code).</p>
+<p>Then ensure that Eclipse is using 2048m of heap by modifying <code>eclipse.ini</code>.</p>
+<p>Then in Eclipse,&nbsp; <code>File: Import: Existing Projects into Workspace</code>. Select the option <code>Search for nested projects</code>.</p>
+<p>Then in a terminal, run <code>./gradlew run</code>.</p>
+<p>At this point, I did get Elasticsearch server running from this gradlew run command line. But it did fails in Eclipse for few reasons.:</p>
+<p>First point: if we open the ElasticSearch project in Eclipse, we see a tons of project. In order to run ElasticSearch, you will need to open the “server” project and run the java class org.elasticsearch.bootstrap.</p>
+<p>Second point: before attempting to run the project, it needs in fact tons of JVM setting. In order to get the list of JVM settings,&nbsp; run again “./gradlew run” and check the console for the list of JVM arguments. So in my case, as an example, I had this:</p>
+<p>[elasticsearch] [2019-03-19T15:20:45,441][INFO ][o.e.n.Node ] [node-0] JVM arguments [-Xms1g, -Xmx1g, -XX:+UseConcMarkSweepGC, -XX:CMSInitiatingOccupancyFraction=75, -XX:+UseCMSInitiatingOccupancyOnly, -Des.networkaddress.cache.ttl=60, -Des.networkaddress.cache.negative.ttl=10, -XX:+AlwaysPreTouch, -Xss1m, -Djava.awt.headless=true, -Dfile.encoding=UTF-8, -Djna.nosys=true, -XX:-OmitStackTraceInFastThrow, -Dio.netty.noUnsafe=true, -Dio.netty.noKeySetOptimization=true, -Dio.netty.recycler.maxCapacityPerThread=0, -Dlog4j.shutdownHookEnabled=false, -Dlog4j2.disable.jmx=true, -Djava.io.tmpdir=/tmp/elasticsearch-10119024523271988359, -XX:+HeapDumpOnOutOfMemoryError, -XX:HeapDumpPath=data, -XX:ErrorFile=logs/hs_err_pid%p.log, -Xlog:gc*,gc+age=trace,safepoint:file=logs/gc.log:utctime,pid,tags:filecount=32,filesize=64m, -Djava.locale.providers=COMPAT, -XX:UseAVX=2, -Dio.netty.allocator.type=unpooled, -Xms512m, -Xmx512m, -ea, -esa, -Des.path.home=/home/xav/elk/sourceelastic/elasticsearch-master/distribution/build/cluster/run node0/elasticsearch-8.0.0-SNAPSHOT, -Des.path.conf=/home/xav/elk/sourceelastic/elasticsearch-master/distribution/build/cluster/run node0/elasticsearch-8.0.0-SNAPSHOT/config, -Des.distribution.flavor=default, -Des.distribution.type=tar]</p>
+<p>So find your JVMs setting, then in Eclipse go to Windows-&gt;Preference then Java-&gt;Installed JRE, select your JDK, then “Edit” then add you arguments in “Defaults VM arguments”.</p>
+<p>Despite this, I experience a security policy error.</p>
+<p>I fixed it as follow:</p>
+<p>Step 1: Adding a new JVM argument:</p>
+<p>-Djava.security.policy=/home/xav/elk/sourceelastic/elasticsearch-master/distribution/src/config/java.policy</p>
+<p>-Step 2: Creating the file java.policy in the location above with the following content:</p>
+<p>grant {<br>
+permission java.lang.RuntimePermission “createClassLoader”;<br>
+};</p>
+<p>Then I experienced another error as follow:</p>
+<p>Caused by: java.lang.IllegalStateException: jar hell!<br>
+class: com.google.common.annotations.Beta<br>
+jar1: /home/xav/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar<br>
+jar2: /home/xav/elk/sourceelastic/elasticsearch-master/distribution/build/cluster/run node0/elasticsearch-8.0.0-SNAPSHOT/modules/x-pack-security/guava-19.0.jar</p>
+<p>This error is happening because the guava library is found in multiple location in various project (3 in my case). I ended up just removing the guava library from 2 location to prevent the error (I assume not an ideal solution).</p>
+<p>Finaly ElasticSearch was running fine as indicated by the Eclipse console:</p>
+<p>[2019-04-01T22:37:28,612][INFO ][o.e.h.AbstractHttpServerTransport] [node-0] publish_address {127.0.0.1:9200}, bound_addresses {[::1]:9200}, {127.0.0.1:9200}<br>
+[2019-04-01T22:37:28,613][INFO ][o.e.n.Node ] [node-0] started</p>
+<p>This confirmed by browsing to ElasticSearch:</p>
+<p class="hide-if-no-js"><a id="set-post-thumbnail" class="thickbox" href="http://www.thecasualblogger.com/wp-admin/media-upload.php?post_id=64&amp;type=image&amp;TB_iframe=1" aria-describedby="set-post-thumbnail-desc"><img class="attachment-266x266 size-266x266" src="http://www.thecasualblogger.com/wp-content/uploads/2018/10/ElasticSearchRunning.png" sizes="100vw" srcset="http://www.thecasualblogger.com/wp-content/uploads/2018/10/ElasticSearchRunning.png 568w, http://www.thecasualblogger.com/wp-content/uploads/2018/10/ElasticSearchRunning-300x236.png 300w" alt="" data-pagespeed-url-hash="1647713549" onload="pagespeed.CriticalImages.checkImageForCriticality(this);" width="266" height="209"></a></p>
+<p>&nbsp;</p>
+<p>Note: I also experience the following error:</p>
+<p>ERROR: Temporary file directory [/tmp/elasticsearch-10119024523271988359] does not exist or is not accessible</p>
+<p>I ended up just created the missing folder (again certainly not ideal but just trying to make it run).</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+	</div><!-- .entry-content -->
+  
+  </body>
+</html>
